@@ -91,7 +91,8 @@ class myImageFloder(data.Dataset):
     def __getitem__(self, index):
         left = self.left[index]
         right = self.right[index]
-        disp_L = self.disp_L[index]
+        #disp_L = self.disp_L[index]
+        disp_L_path = self.disp_L[index] if self.disp_L is not None else None
 
         image_index = int(left.split('/')[-1].split('.')[0])
         
@@ -117,11 +118,13 @@ class myImageFloder(data.Dataset):
 
         left_img = self.loader(left)
         right_img = self.loader(right)
-        if not self.flip_this_image:
+        if not self.flip_this_image and (disp_L_path is not None and os.path.exists(disp_L_path)):
             dataL = self.dploader(disp_L)
         else:
-            disp_R = disp_L[:-4] + '_r.npy'
-            dataL = self.dploader(disp_R)
+            #disp_R = disp_L[:-4] + '_r.npy'
+            #dataL = self.dploader(disp_R)
+            print('No disparity file found for {}. Using zeros.'.format(disp_L_path))
+            dataL = np.zeros(left_img.size, dtype=np.float32)
 
         # box labels
         if self.training or self.generate_target:
@@ -249,6 +252,7 @@ class myImageFloder(data.Dataset):
         right_img = torch.reshape(right_img,[1,3,right_img.shape[1],right_img.shape[2]])
 
         img_size = (left_img.shape[2], left_img.shape[3])
+        #print('Image size:', img_size)
 
         top_pad = 384-left_img.shape[2]
         left_pad = 1248-left_img.shape[3]

@@ -294,9 +294,18 @@ class StereoNet(nn.Module):
                     ).reshape(*self.coord_rect.shape[:3], 2), 
                 dtype=torch.float32)
 
+                self.coord_rect = self.coord_rect.to(coord_img.device)#Arka
                 coord_img = torch.cat([coord_img, self.coord_rect[..., 2:]], dim=-1)
-                norm_coord_img = (coord_img - torch.as_tensor([self.CV_X_MIN, self.CV_Y_MIN, self.CV_Z_MIN])[None, None, None, :]) / \
-                    (torch.as_tensor([self.CV_X_MAX, self.CV_Y_MAX, self.CV_Z_MAX]) - torch.as_tensor([self.CV_X_MIN, self.CV_Y_MIN, self.CV_Z_MIN]))[None, None, None, :]
+
+                device = coord_img.device
+                norm_coord_img = (coord_img - torch.as_tensor(
+                    [self.CV_X_MIN, self.CV_Y_MIN, self.CV_Z_MIN], device=device
+                        )[None, None, None, :]) / torch.as_tensor(
+                        [self.CV_X_MAX - self.CV_X_MIN, self.CV_Y_MAX - self.CV_Y_MIN, self.CV_Z_MAX - self.CV_Z_MIN], device=device
+                        )[None, None, None, :]
+
+                #norm_coord_img = (coord_img - torch.as_tensor([self.CV_X_MIN, self.CV_Y_MIN, self.CV_Z_MIN])[None, None, None, :]) / \
+                #    (torch.as_tensor([self.CV_X_MAX, self.CV_Y_MAX, self.CV_Z_MAX]) - torch.as_tensor([self.CV_X_MIN, self.CV_Y_MIN, self.CV_Z_MIN]))[None, None, None, :]
                 norm_coord_img = norm_coord_img * 2. - 1.
                 norm_coord_imgs.append(norm_coord_img)
             norm_coord_imgs = torch.stack(norm_coord_imgs, dim=0)

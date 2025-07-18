@@ -55,6 +55,7 @@ class Calibration(object):
         # Rigid transform from Velodyne coord to reference camera coord
         self.V2C = calibs['Tr_velo_to_cam']
         self.V2C = np.reshape(self.V2C, [3, 4])
+        #print(f"V2C: {self.V2C}")
         self.C2V = inverse_rigid_trans(self.V2C)
         # Rotation from reference camera coord to rect camera coord
         self.R0 = calibs['R0_rect']

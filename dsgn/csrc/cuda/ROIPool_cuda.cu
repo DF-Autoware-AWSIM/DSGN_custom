@@ -2,9 +2,9 @@
 #include <ATen/ATen.h>
 #include <ATen/cuda/CUDAContext.h>
 
-#include <THC/THC.h>
-#include <THC/THCAtomics.cuh>
-#include <THC/THCDeviceUtils.cuh>
+// #include <THC/THC.h>
+// #include <THC/THCAtomics.cuh>
+// #include <THC/THCDeviceUtils.cuh>
 
 
 // TODO make it in a common file
@@ -126,11 +126,17 @@ std::tuple<at::Tensor, at::Tensor> ROIPool_forward_cuda(const at::Tensor& input,
 
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-  dim3 grid(std::min(THCCeilDiv((long)output_size, 512L), 4096L));
+  //dim3 grid(std::min(THCCeilDiv((long)output_size, 512L), 4096L));
+  dim3 grid(std::min(((long)output_size + 512L - 1) / 512L, 4096L));
+
   dim3 block(512);
 
   if (output.numel() == 0) {
-    THCudaCheck(cudaGetLastError());
+    //THCudaCheck(cudaGetLastError());
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err));
+    }
     return std::make_tuple(output, argmax);
   }
 
@@ -148,7 +154,11 @@ std::tuple<at::Tensor, at::Tensor> ROIPool_forward_cuda(const at::Tensor& input,
          output.data<scalar_t>(),
          argmax.data<int>());
   });
-  THCudaCheck(cudaGetLastError());
+  //THCudaCheck(cudaGetLastError());
+  cudaError_t err4 = cudaGetLastError();
+    if (err4 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err4));
+    }
   return std::make_tuple(output, argmax);
 }
 
@@ -173,12 +183,17 @@ at::Tensor ROIPool_backward_cuda(const at::Tensor& grad,
 
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-  dim3 grid(std::min(THCCeilDiv((long)grad.numel(), 512L), 4096L));
+  //dim3 grid(std::min(THCCeilDiv((long)grad.numel(), 512L), 4096L));
+  dim3 grid(std::min(int((grad.numel() + 512 - 1) / 512), 4096));
   dim3 block(512);
 
   // handle possibly empty gradients
   if (grad.numel() == 0) {
-    THCudaCheck(cudaGetLastError());
+    //THCudaCheck(cudaGetLastError());
+    cudaError_t err2 = cudaGetLastError();
+    if (err2 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err2));
+    }
     return grad_input;
   }
 
@@ -197,6 +212,10 @@ at::Tensor ROIPool_backward_cuda(const at::Tensor& grad,
          grad_input.data<scalar_t>(),
          rois.contiguous().data<scalar_t>());
   });
-  THCudaCheck(cudaGetLastError());
+  //THCudaCheck(cudaGetLastError());
+  cudaError_t err3 = cudaGetLastError();
+    if (err3 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err3));
+    }
   return grad_input;
 }

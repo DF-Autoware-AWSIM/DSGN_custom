@@ -2,9 +2,9 @@
 #include <ATen/ATen.h>
 #include <ATen/cuda/CUDAContext.h>
 
-#include <THC/THC.h>
-#include <THC/THCAtomics.cuh>
-#include <THC/THCDeviceUtils.cuh>
+// #include <THC/THC.h>
+// #include <THC/THCAtomics.cuh>
+// #include <THC/THCDeviceUtils.cuh>
 
 // TODO make it in a common file
 #define CUDA_1D_KERNEL_LOOP(i, n)                            \
@@ -218,11 +218,16 @@ at::Tensor BuildCostVolume_forward_cuda(const at::Tensor& left,
   auto output_size = num_batch * channels * 2 * max_disp * height * width;
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-  dim3 grid(std::min(THCCeilDiv((long)(output_size / 2), 512L), 4096L));
+  //dim3 grid(std::min(THCCeilDiv((long)(output_size / 2), 512L), 4096L));
+  dim3 grid(std::min(int((output_size + 512 - 1) / 512), 4096));
   dim3 block(512);
 
   if (output.numel() == 0) {
-    THCudaCheck(cudaGetLastError());
+    //THCudaCheck(cudaGetLastError());
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err));
+    }
     return output;
   }
 
@@ -239,7 +244,11 @@ at::Tensor BuildCostVolume_forward_cuda(const at::Tensor& left,
          max_disp,
          output.data<scalar_t>());
   });
-  THCudaCheck(cudaGetLastError());
+  //THCudaCheck(cudaGetLastError());
+  cudaError_t err2 = cudaGetLastError();
+    if (err2 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err2));
+    }
   return output;
 }
 
@@ -262,12 +271,17 @@ std::tuple<at::Tensor, at::Tensor> BuildCostVolume_backward_cuda(const at::Tenso
 
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-  dim3 grid(std::min(THCCeilDiv((long)grad.numel(), 512L), 4096L));
+  //dim3 grid(std::min(THCCeilDiv((long)grad.numel(), 512L), 4096L));
+  dim3 grid(std::min(int((grad.numel() + 512 - 1) / 512), 4096));
   dim3 block(512);
 
   // handle possibly empty gradients
   if (grad.numel() == 0) {
-    THCudaCheck(cudaGetLastError());
+    //THCudaCheck(cudaGetLastError());
+    cudaError_t err3 = cudaGetLastError();
+    if (err3 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err3));
+    }
     return std::make_tuple(grad_left, grad_right);
   }
 
@@ -284,7 +298,11 @@ std::tuple<at::Tensor, at::Tensor> BuildCostVolume_backward_cuda(const at::Tenso
          grad_left.data<scalar_t>(),
          grad_right.data<scalar_t>());
   });
-  THCudaCheck(cudaGetLastError());
+  //THCudaCheck(cudaGetLastError());
+  cudaError_t err4 = cudaGetLastError();
+    if (err4 != cudaSuccess) {
+    printf("CUDA error: %s\n", cudaGetErrorString(err4));
+    }
   return std::make_tuple(grad_left, grad_right);
 }
 

@@ -31,7 +31,7 @@ import torch.multiprocessing as mp
 def get_parser():
     parser = argparse.ArgumentParser(description='PSMNet')
     parser.add_argument('-cfg', '--cfg', '--config', default='./configs/default/config_car.py', help='config path')
-    parser.add_argument('--data_path', default='./data/kitti/training/', help='data_path')
+    parser.add_argument('--data_path', default='./data/awsim/training/', help='data_path')
     parser.add_argument('--epochs', type=int, default=60, help='number of epochs to train')
     parser.add_argument('--loadmodel', default=None, help='load model')
     parser.add_argument('--savemodel', default=None, help='save model')
@@ -39,7 +39,7 @@ def get_parser():
     parser.add_argument('--seed', type=int, default=1, metavar='S', help='random seed (default: 1)')
     parser.add_argument('--devices', '-d', type=str, default=None)
     parser.add_argument('--lr_scale', type=int, default=40, metavar='S', help='lr scale')
-    parser.add_argument('--split_file', default='./data/kitti/train.txt', help='split file')
+    parser.add_argument('--split_file', default='./data/awsim/trainval.txt', help='split file')
     parser.add_argument('--btrain', '-btrain', type=int, default=None)
     parser.add_argument('--start_epoch', type=int, default=None)
 

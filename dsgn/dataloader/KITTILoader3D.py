@@ -22,7 +22,7 @@ def get_kitti_annos(labels,
         if label.type == 'Pedestrian' or label.type == 'Person_sitting': typ = 1
         elif label.type == 'Car' or label.type == 'Van': typ = 2
         elif label.type == 'Cyclist': typ = 3
-        elif label.type == 'DontCare': typ = 4
+        elif label.type == 'Other': typ = 4#Chaning DontCare to Other
         elif label.type in ['Misc', 'Tram', 'Truck']: continue
         else:
             raise ValueError('Invalid Label.')

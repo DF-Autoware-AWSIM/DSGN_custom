@@ -8,7 +8,8 @@ import sys
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 class kitti_dataset(object):
-    def __init__(self, split='train', data_path=osp.join(CURRENT_DIR, '..', '..', 'data', 'kitti'), 
+    #Arka change kitti to awsim dataset
+    def __init__(self, split='train', data_path=osp.join(CURRENT_DIR, '..', '..', 'data', 'awsim'), 
             type_whitelist=['Car'],
             min_reflectance=-0.1,
             res_path = None):
