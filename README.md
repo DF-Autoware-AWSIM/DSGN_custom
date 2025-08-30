@@ -63,6 +63,10 @@ python3 setup.py build develop --user
 ### Data Preparation
 
 (1) Please download the KITTI dataset and create the model folders. KITTI dataset is avaible [here](http://www.cvlibs.net/datasets/kitti/eval_object.php?obj_benchmark=3d). Download KITTI [point clouds](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_velodyne.zip), [left images](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_image_2.zip), [right images](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_image_3.zip), [calibrations matrices](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_calib.zip) and [object labels](https://s3.eu-central-1.amazonaws.com/avg-kitti/data_object_label_2.zip). 
+(1.1) Instaed of KITTI the AWSIM dataset can be found here:
+```
+https://kth-my.sharepoint.com/my?id=%2Fpersonal%2Farkap%5Fug%5Fkth%5Fse%2FDocuments%2FDF
+```
 ```
 ln -s /path/to/KITTI_DATA_PATH ./data/kitti/
 ln -s /path/to/OUTPUT_PATH ./outputs/
