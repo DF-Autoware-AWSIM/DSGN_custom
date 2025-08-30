@@ -147,6 +147,10 @@ python3 tools/test_net.py --loadmodel ./outputs/MODEL_NAME/finetune_xx.tar -btes
 ```
 KITTI Detection results and evaluation results will be saved in the model folder. 
 
+Or for AWSIM 
+```
+python3 tools/test_net.py --data_path data/awsim/testing/ --split_file data/kitti/test.txt --loadmodel outputs/dsgn_12g_awsim_remote_downsample/finetune_60.tar -btest 1 -d 0-3
+``
 ### Performance and Model Zoo
 
 We provide several pretrained models for our experiments, which are evaluated on KITTI val set.
