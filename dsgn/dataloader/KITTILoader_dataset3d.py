@@ -117,12 +117,24 @@ class myImageFloder(data.Dataset):
 
         left_img = self.loader(left)
         right_img = self.loader(right)
+        #Downsample the image to 540x960
+        downscale_factor = 0.5
+        new_width = int(left_img.width * downscale_factor)
+        new_height = int(left_img.height * downscale_factor)
+        left_img = left_img.resize((new_width, new_height), Image.BILINEAR)
+        right_img = right_img.resize((new_width, new_height), Image.BILINEAR)
+        #print('Left image size:', left_img.size, 'Right image size:', right_img.size)
         if not self.flip_this_image:
             dataL = self.dploader(disp_L)
         else:
             disp_R = disp_L[:-4] + '_r.npy'
             dataL = self.dploader(disp_R)
-
+        #Downsample the disparity map to 540x960
+        disp_img = Image.fromarray(dataL)
+        disp_img = disp_img.resize((new_width, new_height), Image.NEAREST)  # Use NEAREST for disparity
+        # Convert back to float32 NumPy array
+        dataL = np.array(disp_img).astype(np.float32)
+        #print('Disparity map size:', dataL.shape)
         # box labels
         if self.training or self.generate_target:
             if self.cfg.RPN3D_ENABLE:
@@ -249,12 +261,23 @@ class myImageFloder(data.Dataset):
         right_img = torch.reshape(right_img,[1,3,right_img.shape[1],right_img.shape[2]])
 
         img_size = (left_img.shape[2], left_img.shape[3])
+        #print('Image size:', right_img.shape)
+        #top_pad = 384-left_img.shape[2]
+        #left_pad = 1248-left_img.shape[3]
+        #top_pad = 1080 - left_img.shape[2]
+        #left_pad = 1920 - left_img.shape[3]
+        def pad_to_multiple(img, divisor=32):
+            _, _, h, w = img.shape
+            pad_h = (divisor - h % divisor) % divisor
+            pad_w = (divisor - w % divisor) % divisor
+            return F.pad(img, (0, pad_w, 0, pad_h), 'constant', 0), pad_h, pad_w
 
-        top_pad = 384-left_img.shape[2]
-        left_pad = 1248-left_img.shape[3]
-
-        left_img = F.pad(left_img,(0,left_pad, 0,top_pad),'constant',0)
-        right_img = F.pad(right_img,(0,left_pad, 0,top_pad),'constant',0)
+        left_img, top_pad, left_pad = pad_to_multiple(left_img)
+        right_img, _, _ = pad_to_multiple(right_img)
+        #print('Padding left:', left_pad, 'top:', top_pad)
+        #left_img = F.pad(left_img,(0,left_pad, 0,top_pad),'constant',0)
+        #right_img = F.pad(right_img,(0,left_pad, 0,top_pad),'constant',0)
+        #print('Left image shape:', left_img.shape)
 
         dataL = F.pad(torch.as_tensor(dataL), (0,left_pad, 0,top_pad), 'constant', -389.63037)
 

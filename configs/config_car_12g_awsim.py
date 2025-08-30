@@ -6,7 +6,7 @@ cfg = CN()
 
 cfg.cnt = 0
 
-cfg.btrain = 8
+cfg.btrain = 1
 
 cfg.hg_cv = False
 
@@ -19,8 +19,8 @@ cfg.GN = True
 
 cfg.num_classes = 3 #3
 
-cfg.input_size = [384, 1248]
-cfg.output_size = [96, 312]
+cfg.input_size = [1080, 1920]
+cfg.output_size = [270, 480]
 
 #------------- disparity ---------------#
 cfg.maxdisp = 192
@@ -51,9 +51,9 @@ cfg.RPN3D.ANCHORS_LENGTH = [0.8, 3.9, 1.76]
 cfg.RPN3D.PRIOR_PROB = 0.01 # RetinaNet
 cfg.RPN3D.FOCAL_GAMMA = 2.0
 cfg.RPN3D.FOCAL_ALPHA = 0.25
-cfg.RPN3D.PRE_NMS_THRESH = 0.01#0.05
+cfg.RPN3D.PRE_NMS_THRESH = 0.05#0.05
 cfg.RPN3D.PRE_NMS_TOP_N = 300
-cfg.RPN3D.NMS_THRESH = 0.8#0.6 # [0.6, 0.6, 0.45]
+cfg.RPN3D.NMS_THRESH = 0.6#0.6 # [0.6, 0.6, 0.45]
 cfg.RPN3D.POST_NMS_TOP_N = 30
 cfg.RPN3D.NUM_CONVS = 2
 cfg.RPN3D.NUM_3DCONVS = 1
