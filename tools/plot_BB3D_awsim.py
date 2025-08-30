@@ -1,5 +1,8 @@
+#This script loads images from awsim_dataset, the predicted 3D bounding boxes from DSGN,
+#  and visualizes the 3D boxes on the images.
 import numpy as np
 import cv2
+import os
 
 def read_kitti_detection(filename):
     """Parse a KITTI detection file into a list of detections."""
@@ -37,9 +40,9 @@ def compute_box_3d(dim, loc, ry):
     h, w, l = dim
     x, y, z = loc
     # 3D bounding box corners in object coordinate
-    x_corners = [l/2, l/2, -l/2, -l/2, l/2, l/2, -l/2, -l/2]
-    y_corners = [0, 0, 0, 0, -h, -h, -h, -h]
-    z_corners = [w/2, -w/2, -w/2, w/2, w/2, -w/2, -w/2, w/2]
+    x_corners = [ l/2,  l/2, -l/2, -l/2,  l/2,  l/2, -l/2, -l/2]
+    z_corners = [ h/2,  h/2,  h/2,  h/2, -h/2, -h/2, -h/2, -h/2]
+    y_corners = [ w/2, -w/2, -w/2,  w/2,  w/2, -w/2, -w/2,  w/2]
     corners = np.array([x_corners, y_corners, z_corners])
     # Rotation
     R = np.array([
@@ -61,10 +64,9 @@ def project_to_image(pts_3d, P):
     pts_2d[:2] /= pts_2d[2]
     return pts_2d[:2]
 
-def draw_projected_box3d(img, qs, color=(0,255,0), thickness=2):
+def draw_projected_box3d(img, qs, color=(0,255,0), thickness=5):
     """Draw 3d bounding box in image"""
     qs = qs.astype(np.int32).T
-    # 0-3: lower corners, 4-7: upper corners
     for k in range(0,4):
         i,j = k,(k+1)%4
         cv2.line(img, tuple(qs[i]), tuple(qs[j]), color, thickness)
@@ -73,24 +75,52 @@ def draw_projected_box3d(img, qs, color=(0,255,0), thickness=2):
     return img
 
 if __name__ == "__main__":
-    # Example usage
-    data_path = "/home/arka/DSGN/data/awsim/training/"
-    output_path = "/home/arka/DSGN/outputs/dsgn_12g_awsim/kitti_output_train/"
-    image_file = data_path+"image_2/000003.png"
-    calib_file = data_path+"calib/000003.txt"
-    detection_file = output_path+"000003.txt"
+    import sys
+    
+    #data_path = "/home/arka/DSGN/data/awsim/training/"
+    #data_path = "/home/arka/DSGN/data/awsim/testing/"
+    data_path = "/home/arka/DSGN/data/awsim/testing_offline/"
+    output_path = "/home/arka/ros2_ws/src/dsgn_offline/resource/awsim_output_offline/"
+    #output_path = "/home/arka/DSGN/outputs/dsgn_12g_awsim_remote_downsample/kitti_output/"
+    image_folder = data_path + "image_2/"
+    calib_folder = data_path + "calib/"
 
-    img = cv2.imread(image_file)
-    P2 = read_kitti_calib(calib_file)
-    detections = read_kitti_detection(detection_file)
+    # List all image files (assume .png)
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith('.png')])
 
-    for det in detections:
-        if det["type"].lower() != "car":  # Change this to visualize other classes
+    for img_file in image_files:
+        print(f"Processing {img_file}")
+        img_path = os.path.join(image_folder, img_file)
+        calib_path = os.path.join(calib_folder, img_file.replace('.png', '.txt'))
+        detection_path = os.path.join(output_path, img_file.replace('.png', '.txt'))
+
+        img = cv2.imread(img_path)
+        if img is None:
+            print(f"Failed to read image {img_path}")
             continue
-        corners_3d = compute_box_3d(det["dimensions"], det["location"], det["rotation_y"])
-        corners_2d = project_to_image(corners_3d, P2)
-        img = draw_projected_box3d(img, corners_2d)
 
-    cv2.imshow("3D Boxes", img)
-    cv2.waitKey(0)
+        try:
+            P2 = read_kitti_calib(calib_path)
+        except Exception as e:
+            print(f"Error reading calibration file {calib_path}: {e}")
+            continue
+        
+        if not os.path.exists(detection_path):
+            print(f"Detection file {detection_path} not found, skipping.")
+            continue
+
+        detections = read_kitti_detection(detection_path)
+
+        for det in detections:
+            if det["type"].lower() != "car":  # Change class filter if needed
+                continue
+            corners_3d = compute_box_3d(det["dimensions"], det["location"], det["rotation_y"])
+            corners_2d = project_to_image(corners_3d, P2)
+            img = draw_projected_box3d(img, corners_2d)
+
+        cv2.imshow("3D Boxes", img)
+        key = cv2.waitKey(0) & 0xFF
+        if key == ord('q'):  # Press 'q' to quit early
+            break
+
     cv2.destroyAllWindows()
